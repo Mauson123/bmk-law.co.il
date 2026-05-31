@@ -1,0 +1,13 @@
+# תלויות
+node_modules/
+
+# משתני סביבה — מכילים את מפתח ה-API, לעולם לא לעלות ל-git
+.env
+.env.local
+
+# לוגים
+npm-debug.log*
+*.log
+
+# מערכת
+.DS_Store
