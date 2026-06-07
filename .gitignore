@@ -11,3 +11,6 @@ npm-debug.log*
 
 # מערכת
 .DS_Store
+
+# מסמכי תיקים רגישים — לעולם לא ל-git
+private_cases/
