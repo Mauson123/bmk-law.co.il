@@ -14,3 +14,6 @@ npm-debug.log*
 
 # מסמכי תיקים רגישים — לעולם לא ל-git
 private_cases/
+
+# פלט סיכומים — עלול להכיל מידע רגיש, לא ל-git
+summaries/
