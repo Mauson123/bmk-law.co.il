@@ -26,12 +26,40 @@ npm run dev        # פיתוח (טעינה מחדש אוטומטית)
 
 האתר יעלה בכתובת http://localhost:3000
 
+## סיכום תיקים מקומי (CLI)
+
+כלי שורת-פקודה שסורק תיקייה של מסמכים, מסכם כל אחד באמצעות Gemini, ובונה
+טבלת ריכוז. **הכל רץ מקומית אצלך** — המסמכים אינם נדחפים ל-git.
+
+```bash
+# מניחים את המסמכים בתיקייה private_cases/ (מוחרגת מ-git), ואז:
+npm run summarize
+
+# או סריקת תיקייה אחרת:
+npm run summarize -- --in "/נתיב/לתיקיית/התיקים" --out summaries
+```
+
+**סוגי קבצים נתמכים:** TXT, MD, DOCX, PDF, ותמונות (PNG/JPG/TIFF/WEBP...).
+PDF סרוק ותמונות עוברים **OCR** אוטומטי דרך יכולת הראייה של Gemini.
+
+**פלט** (בתיקייה `summaries/`, מוחרגת מ-git):
+- `index.csv` — טבלה מרכזת: שורה לכל תיק (צדדים, נושא, סטטוס, סכומים, תאריכים)
+- `<שם>.summary.md` — סיכום מפורט לכל מסמך
+- הרצה חוזרת מדלגת על מה שכבר סוכם (resume)
+
+> ⚠️ פרטיות: תוכן המסמכים נשלח ל-Gemini API של Google לצורך הסיכום. ודאו
+> שהשימוש תואם את חובת הסודיות וההסכמות מול לקוחותיכם.
+
 ## מבנה הפרויקט
 
 ```
 src/
   server.js          אתחול Express והגשת האתר
-  gemini.js          חיבור ל-Gemini דרך @google/genai
+  gemini.js          חיבור הצ'אט ל-Gemini
+  genaiClient.js     client משותף של Gemini
+  summarizer.js      סיכום מסמך לפלט מובנה
+  ocr.js             OCR לתמונות/PDF סרוק (Gemini Vision)
+  summarize-cli.js   סורק תיקייה ומסכם (npm run summarize)
   routes/chat.js     POST /api/chat
 public/
   index.html         דף הבית + ווידג'ט צ'אט (RTL)
