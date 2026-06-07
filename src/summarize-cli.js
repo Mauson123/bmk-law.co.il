@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import { summarizeText } from './summarizer.js';
+import { extractTextFromMedia } from './ocr.js';
 
 // ---------- ניתוח ארגומנטים ----------
 function parseArgs(argv) {
@@ -15,7 +16,18 @@ function parseArgs(argv) {
   return args;
 }
 
-const SUPPORTED = new Set(['.txt', '.md', '.pdf', '.docx']);
+// קבצי תמונה — מעובדים תמיד דרך OCR (Gemini Vision).
+const IMAGE_MIME = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.heic': 'image/heic',
+  '.tif': 'image/tiff',
+  '.tiff': 'image/tiff',
+  '.bmp': 'image/bmp',
+};
+const SUPPORTED = new Set(['.txt', '.md', '.pdf', '.docx', ...Object.keys(IMAGE_MIME)]);
 const MAX_CHARS = 100000; // מעבר לכך — פיצול וסיכום היררכי
 const DELAY_MS = 600; // השהיה בין קריאות API לכיבוד מגבלות קצב
 
@@ -32,12 +44,21 @@ async function extractText(filePath) {
     const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
     const buf = await fs.readFile(filePath);
     const data = await pdfParse(buf);
-    return data.text;
+    // PDF סרוק (ללא שכבת טקסט) — נפילה ל-OCR דרך Gemini Vision.
+    if (data.text && data.text.trim()) return data.text;
+    console.log('    🔍 אין שכבת טקסט — מפעיל OCR…');
+    return extractTextFromMedia(buf, 'application/pdf');
   }
   if (ext === '.docx') {
     const { default: mammoth } = await import('mammoth');
     const { value } = await mammoth.extractRawText({ path: filePath });
     return value;
+  }
+  if (IMAGE_MIME[ext]) {
+    // תמונה — תמיד OCR.
+    console.log('    🔍 תמונה — מפעיל OCR…');
+    const buf = await fs.readFile(filePath);
+    return extractTextFromMedia(buf, IMAGE_MIME[ext]);
   }
   return null;
 }
